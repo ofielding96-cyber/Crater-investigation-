@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meteorite Impact Lab: Investigating Crater Formation</title>
+<style>
+:root{--navy:#0b1a33;--navy2:#122547;--panel:#16305a;--line:#2c4b7c;--teal:#2ec4b6;--orange:#ff9f43;--white:#f4f7fb;--muted:#a9b8d0;--good:#5fd38d;--bad:#ff6b6b}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:150px}
+body{margin:0;background:var(--navy);color:var(--white);font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;line-height:1.5;font-size:16px}
+#printReport{display:none}
+header#top{position:sticky;top:0;z-index:50;background:linear-gradient(#0a1730,#0d2042);border-bottom:2px solid var(--teal);padding:8px 14px}
+.hrow{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.brand b{font-size:1.15rem;color:var(--teal)}.brand span{display:block;font-size:.8rem;color:var(--muted)}
+.hdr-controls{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.hdr-controls label{font-size:.8rem;color:var(--muted);display:flex;gap:6px;align-items:center}
+#progress{display:flex;gap:6px;flex-wrap:wrap;align-items:center;margin-top:8px}
+.chip{font-size:.78rem;padding:3px 10px;border-radius:99px;border:1px solid var(--line);background:#0e2244;color:var(--muted);text-decoration:none}
+.chip.done{background:var(--teal);color:#032b28;border-color:var(--teal);font-weight:700}
+.pbar{flex:1;min-width:120px;height:8px;background:#0e2244;border-radius:6px;overflow:hidden}.pbar i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--orange));width:0;transition:width .4s}
+main{max-width:1180px;margin:0 auto;padding:16px}
+.card{background:var(--navy2);border:1px solid var(--line);border-radius:14px;padding:18px 20px;margin:0 0 18px}
+h1,h2,h3{margin:.2em 0 .5em}h2{color:var(--teal);font-size:1.35rem}h3{color:var(--orange);font-size:1.05rem}
+h2 .tag{background:var(--orange);color:#3a1d00;border-radius:8px;padding:1px 9px;font-size:.85rem;margin-right:8px}
+.hero{background:radial-gradient(circle at 80% 0,#1d3f7a,#0f2347 60%);}
+.hero h1{font-size:2rem}.lead{color:var(--muted);max-width:75ch}
+.steps4{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-top:12px}
+.steps4 div{background:#0e2244;border:1px solid var(--line);border-radius:10px;padding:10px}.steps4 b{color:var(--orange)}
+button,select,input,textarea{font:inherit}
+.btn{background:var(--teal);color:#032b28;border:0;border-radius:9px;padding:8px 14px;font-weight:700;cursor:pointer}
+.btn:hover:not(:disabled){filter:brightness(1.1)}.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.orange{background:var(--orange);color:#3a1d00}.btn.ghost{background:transparent;color:var(--white);border:1px solid var(--line)}.btn.danger{background:#3a1620;color:#ffb3b3;border:1px solid #7a2a3a}
+.btn.big{font-size:1.2rem;padding:12px 26px}.btn.sm{padding:4px 10px;font-size:.85rem}
+input[type=text],input[type=number],textarea,select{background:#0b1d3b;color:var(--white);border:1px solid var(--line);border-radius:8px;padding:7px 9px;width:100%}
+textarea{min-height:84px;resize:vertical}
+input:focus,textarea:focus,select:focus,button:focus-visible{outline:2px solid var(--orange);outline-offset:1px}
+.hdr-controls input,.hdr-controls select{width:auto}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.field label{display:block;font-weight:600;margin-bottom:3px}
+.note{font-size:.85rem;color:var(--muted)}.warn{border-left:4px solid var(--orange);background:#2a2033;padding:8px 12px;border-radius:6px;font-size:.9rem}
+.box{background:#0e2244;border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0}
+#simWrap{position:relative}#sim{width:100%;height:auto;display:block;border-radius:12px;border:2px solid var(--line);background:#08142b}
+.readouts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:10px 0}
+.ro{background:#0e2244;border:1px solid var(--line);border-radius:10px;padding:6px 10px}.ro small{color:var(--muted);display:block;font-size:.72rem}.ro b{font-size:1.2rem;color:var(--teal)}.ro.hot b{color:var(--orange)}
+.ctl-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px;margin-top:10px}
+.ctl{background:#0e2244;border:1px solid var(--line);border-radius:12px;padding:12px}
+.ctl.locked{opacity:.6}.ctl h3{margin-top:0}
+input[type=range]{width:100%;accent-color:var(--orange)}
+.qbtns{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}.qbtns button{background:#0b1d3b;color:var(--white);border:1px solid var(--line);border-radius:7px;padding:3px 9px;cursor:pointer}.qbtns button.on{background:var(--orange);color:#3a1d00;border-color:var(--orange)}
+.fixed span{display:inline-block;margin:3px 4px 0 0;background:#0b1d3b;border:1px dashed var(--teal);border-radius:99px;padding:2px 10px;font-size:.82rem}
+.chk{display:flex;gap:8px;align-items:flex-start;margin:6px 0;font-size:.92rem}.chk input{margin-top:5px}
+#msg,#gmsg{min-height:1.5em;margin-top:8px;font-weight:600}
+table{border-collapse:collapse;width:100%}th,td{border:1px solid var(--line);padding:6px 8px;text-align:center}th{background:#0e2244;color:var(--teal);font-size:.88rem}
+td input{text-align:center;padding:5px}td.mean{background:#102b52;font-weight:700;color:var(--orange)}
+.hide-t23 .t23{display:none}
+#graph{width:100%;height:auto;background:#fff;border-radius:10px;border:2px solid var(--line);cursor:crosshair;touch-action:manipulation}
+details{margin:6px 0}summary{cursor:pointer;color:var(--teal);font-weight:600}
+details.hint,details.starters{background:#0e2244;border:1px dashed var(--line);border-radius:8px;padding:6px 10px}
+.starters button{display:block;text-align:left;margin:4px 0;background:#0b1d3b;color:var(--white);border:1px solid var(--line);border-radius:6px;padding:4px 8px;cursor:pointer;width:100%}
+.lv-support,.lv-challenge{display:none}
+body[data-level=support] .lv-support{display:block}body[data-level=challenge] .lv-challenge{display:block}
+body[data-level=support] details.lv-support{display:block}
+#demoPanel{display:none}body.demo #demoPanel{display:block}body.demo .ws{display:none!important}
+.dbar{height:14px;background:linear-gradient(90deg,var(--teal),var(--orange));border-radius:4px}
+.overlay{position:fixed;inset:0;background:rgba(3,10,25,.85);z-index:100;display:none;overflow:auto;padding:20px}
+.overlay.open{display:block}.overlay .inner{max-width:900px;margin:0 auto;background:var(--navy2);border:2px solid var(--teal);border-radius:14px;padding:20px}
+.overlay dt{color:var(--orange);font-weight:700;margin-top:8px}.overlay dd{margin:0 0 4px 0}
+#teacher .inner{border-color:var(--orange)}
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--orange);color:#3a1d00;padding:8px 18px;border-radius:10px;font-weight:700;z-index:200;display:none;max-width:90vw}
+.ok{color:var(--good)}.no{color:var(--bad)}
+.locked-msg{color:var(--muted);font-style:italic}
+footer{text-align:center;color:var(--muted);font-size:.8rem;padding:20px}
+@media (max-width:640px){.hero h1{font-size:1.5rem}header#top{position:static}}
+@media print{
+ body{background:#fff;color:#000;font-size:11pt}#app,header#top,.overlay,#toast{display:none!important}
+ #printReport{display:block;font-family:Georgia,serif;color:#000}
+ #printReport h1{font-size:18pt;color:#0b1a33;border-bottom:2px solid #0b1a33}#printReport h2{font-size:13pt;color:#0b1a33;margin:12px 0 4px;border-bottom:1px solid #999}
+ #printReport table{width:auto;min-width:60%}#printReport th,#printReport td{border:1px solid #444;color:#000;background:#fff;padding:3px 8px}
+ #printReport img{max-width:100%;page-break-inside:avoid}#printReport p{margin:3px 0}.pq{font-weight:bold;margin-top:6px}.pa{border-left:3px solid #999;padding-left:8px;white-space:pre-wrap}
+}
+</style>
+</head>
+<body data-level="core">
+<header id="top">
+ <div class="hrow">
+  <div class="brand"><b>Meteorite Impact Lab</b><span>Investigating Crater Formation &middot; Year 7 Space and Gravity</span></div>
+  <div class="hdr-controls">
+   <label>Name <input type="text" id="pupilName" placeholder="Your name" autocomplete="off"></label>
+   <label>Level <select id="level"><option value="support">Support</option><option value="core">Core</option><option value="challenge">Challenge</option></select></label>
+   <button class="btn ghost sm" id="btnGloss">Glossary</button>
+   <button class="btn sm" id="btnPrint">Print / Save as PDF</button>
+   <button class="btn danger sm" id="btnReset">Reset Investigation</button>
+   <button class="btn ghost sm" id="btnTeacher">Teacher</button>
+  </div>
+ </div>
+ <div id="progress"></div>
+</header>
+
+<main id="app">
+<section class="card hero" id="intro">
+ <h1>Meteorite Impact Lab</h1>
+ <p class="lead">Welcome to the virtual laboratory. You will investigate <b>how the height a meteorite is dropped from affects the size of the crater it makes</b>. You will plan a fair test, collect results, plot a graph and write a scientific conclusion, all on your own.</p>
+ <h3>How do craters form on the Moon?</h3>
+ <p>Space is full of rocks called <b>meteoroids</b>. When one hits the Moon at tens of thousands of kilometres per hour, its movement energy is transferred to the surface in a fraction of a second. Rock is pushed out and thrown away, leaving a bowl-shaped <b>crater</b> with a raised rim.</p>
+ <div class="steps4">
+  <div><b>1. Approach</b><br>A meteoroid speeds towards the surface. The Moon has no air to slow it down.</div>
+  <div><b>2. Impact</b><br>Its kinetic energy is transferred to the ground in an instant.</div>
+  <div><b>3. Excavation</b><br>Material is thrown outwards, forming a bowl and a raised rim.</div>
+  <div><b>4. Settling</b><br>Dust and rocks settle. The crater stays for a very long time.</div>
+ </div>
+ <p>Why can we still see craters that are <b>millions or billions of years old</b>? The Moon has almost no atmosphere, no wind or rain, no flowing water and no moving tectonic plates, so there is nothing to wear craters away. On Earth, weather, oceans, plants and moving plates hide them.</p>
+ <div class="warn"><b>Important:</b> real meteorites hit at 11 to 72 km/s. In this lab you drop a model meteorite from a few tens of centimetres into flour, at speeds of only a few metres per second. This is an <b>analogy</b> to help us understand the idea. The numbers come from a computer <b>model</b>; they are <u>not</u> measured from real impacts.</div>
+</section>
+
+<div class="ws">
+<section class="card" id="secA">
+ <h2><span class="tag">A</span>Research question</h2>
+ <p style="font-size:1.15rem"><b>How does the height from which a meteorite is dropped affect the diameter of the crater it produces?</b></p>
+ <div class="box lv-support"><b>Variable definitions</b><br><b>Independent variable:</b> the one thing you <i>change</i>. <b>Dependent variable:</b> the thing you <i>measure</i>. <b>Controlled variables:</b> things you keep the <i>same</i> so the test is fair.</div>
+ <div class="grid2">
+  <div class="field"><label for="iv">Independent variable</label><input type="text" id="iv" data-f="iv" placeholder="What will you change?"></div>
+  <div class="field"><label for="dv">Dependent variable</label><input type="text" id="dv" data-f="dv" placeholder="What will you measure?"></div>
+  <div class="field"><label for="cv1">Controlled variable 1</label><input type="text" id="cv1" data-f="cv1"></div>
+  <div class="field"><label for="cv2">Controlled variable 2</label><input type="text" id="cv2" data-f="cv2"></div>
+  <div class="field"><label for="cv3">Controlled variable 3</label><input type="text" id="cv3" data-f="cv3"></div>
+ </div>
+</section>
+
+<section class="card" id="secB">
+ <h2><span class="tag">B</span>Hypothesis</h2>
+ <p>A hypothesis is a prediction you can test, with a scientific reason. Complete the sentence or write your own.</p>
+ <div class="box">I predict that as the drop height increases, the crater diameter will <input type="text" data-f="hyp1" style="width:220px;display:inline-block" aria-label="will increase, decrease or stay the same"> because <input type="text" data-f="hyp2" style="width:min(100%,520px);display:inline-block" aria-label="reason"></div>
+ <div class="field"><label for="hypOwn">Or write your own hypothesis</label><textarea id="hypOwn" data-f="hypOwn"></textarea></div>
+ <details class="hint lv-support"><summary>Hint</summary>Think about energy. What does something have when it is high up? What happens to its speed as it falls?</details>
+</section>
+
+<section class="card" id="secC">
+ <h2><span class="tag">C</span>Method</h2>
+ <ol>
+  <li>Choose <b>Drop height</b> as the variable you are investigating in the lab below. The meteorite size, flour surface, flour depth (5 cm) and 90&deg; vertical drop are locked.</li>
+  <li>Set the drop height to <b>20 cm</b> and press <b>Drop Meteorite</b>.</li>
+  <li>Read the crater diameter from the ruler (or let the lab record it).</li>
+  <li>Repeat for <b>40, 60, 80 and 100 cm</b>. Use all five heights.</li>
+  <li>Check that every result is in your table, then plot your graph.</li>
+  <li>Optional: switch on <b>Repeat Trials</b> to drop each height three times, so you can calculate a mean.</li>
+ </ol>
+ <label class="chk"><input type="checkbox" id="methodRead"> I have read the method and I know which variables I must keep the same.</label>
+</section>
+</div>
+
+<section class="card" id="lab">
+ <h2>Virtual laboratory</h2>
+ <div id="simWrap"><canvas id="sim" width="900" height="570" aria-label="Meteorite impact simulation: a meteorite falls into a tray of flour and makes a crater measured with a ruler"></canvas></div>
+ <div class="readouts" aria-live="polite">
+  <div class="ro"><small>Drop height</small><b id="roH"></b></div>
+  <div class="ro"><small>Meteorite mass</small><b id="roM"></b></div>
+  <div class="ro"><small>Meteorite diameter</small><b id="roDia"></b></div>
+  <div class="ro"><small>Impact speed (no air resistance)</small><b id="roV"></b></div>
+  <div class="ro lv-challenge"><small>Gravitational potential energy</small><b id="roE"></b></div>
+  <div class="ro hot"><small>Crater diameter</small><b id="roD">&ndash;</b></div>
+ </div>
+ <div class="ctl-grid">
+  <div class="ctl">
+   <h3>Investigation</h3>
+   <label for="varSel">Independent variable being investigated</label>
+   <select id="varSel"><option value="height">Drop height (main investigation)</option><option value="size">Meteorite size (extension)</option></select>
+   <p class="note">The other controls lock automatically so only one thing changes at a time.</p>
+   <div class="fixed"><b class="note">Controlled:</b><br><span>Surface: flour</span><span>Flour depth: 5 cm</span><span>Impact angle: 90&deg;</span><span>Density: 3.0 g/cm&sup3;</span></div>
+  </div>
+  <div class="ctl" id="ctlH">
+   <h3>Drop height</h3>
+   <input type="range" id="height" min="10" max="150" step="1" aria-label="Drop height in centimetres">
+   <div><b id="heightVal"></b> cm</div>
+   <div class="qbtns" id="qh"></div>
+  </div>
+  <div class="ctl" id="ctlS">
+   <h3>Meteorite size</h3>
+   <label for="mass">Mass: <b id="massVal"></b></label>
+   <input type="range" id="mass" min="10" max="100" step="1">
+   <label for="diam">Diameter: <b id="diamVal"></b></label>
+   <input type="range" id="diam" min="1" max="5" step="0.1">
+   <p class="note">Mass and diameter are <b>linked</b>: the meteorite is a sphere of rock with a fixed density (3.0 g/cm&sup3;), so a wider sphere is also heavier. They cannot be changed separately.</p>
+  </div>
+  <div class="ctl">
+   <h3>Run the experiment</h3>
+   <button class="btn orange big" id="btnDrop">Drop Meteorite</button>
+   <label class="chk"><input type="checkbox" id="optRepeat"> Repeat Trials mode (3 trials per height)</label>
+   <label class="chk"><input type="checkbox" id="optManual"> Record results manually (read the ruler yourself)</label>
+   <label class="chk"><input type="checkbox" id="optVar"> Add simulated measurement variation <span class="note">(random, like real life)</span></label>
+   <div id="msg" role="status"></div>
+  </div>
+ </div>
+ <div class="note" style="margin-top:8px">Not to scale: the meteorite is drawn smaller than it should be, and the height scale is squashed so it fits on screen. The ruler and crater use the same scale.</div>
+</section>
+
+<div id="demoPanel" class="card">
+ <h2>Teacher demonstration mode</h2>
+ <p>Results here are separate from pupil results. Use the controls above, or run the standard heights in order.</p>
+ <button class="btn" id="demoNext">Run next standard height</button>
+ <button class="btn ghost" id="demoReset">Reset demonstration</button>
+ <button class="btn orange" id="demoExit">Exit demonstration mode</button>
+ <div id="demoOut" style="margin-top:12px"></div>
+</div>
+
+<div class="ws">
+<section class="card" id="secD">
+ <h2><span class="tag">D</span>Results</h2>
+ <p>Your table fills in automatically when you drop the meteorite at one of the five heights. You can also type or correct values yourself. The mean is calculated for you.</p>
+ <div class="box lv-support">Hint: the mean is all the trials <b>added up</b>, then <b>divided</b> by the number of trials.</div>
+ <div style="overflow-x:auto"><table id="resTable"><thead><tr><th>Drop height (cm)</th><th>Trial 1 crater diameter (cm)</th><th class="t23">Trial 2 crater diameter (cm)</th><th class="t23">Trial 3 crater diameter (cm)</th><th>Mean crater diameter (cm)</th></tr></thead><tbody></tbody></table></div>
+ <p class="note">Constant for this table: meteorite diameter <b id="constD"></b> cm, mass <b id="constM"></b> g, flour surface 5 cm deep, dropped at 90&deg;. All values are model results.</p>
+ <details><summary>Practice log (every drop you have made)</summary><div id="logOut" class="note"></div></details>
+ <details id="extDet"><summary>Extension: meteorite size results</summary><p class="note">Switch the lab to &ldquo;Meteorite size&rdquo;. Height is fixed at 60 cm. Mass and diameter change together.</p><div id="extOut"></div><button class="btn ghost sm" id="extClear">Clear extension results</button></details>
+</section>
+
+<section class="card" id="secE">
+ <h2><span class="tag">E</span>Graph</h2>
+ <p>Plot your mean results yourself. <b>Click</b> on the graph to place a point. Click an existing point to remove it. Then press <b>Check Graph</b>.</p>
+ <div class="box lv-support"><b>Guided scale:</b> across, each small square is 10 cm of drop height. Up, each line is 1 cm of crater diameter. Plot <i>drop height</i> across and <i>mean crater diameter</i> up.</div>
+ <canvas id="graph" width="720" height="450" aria-label="Graph area: drop height against mean crater diameter"></canvas>
+ <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap">
+  <button class="btn" id="btnCheck">Check Graph</button>
+  <button class="btn orange" id="btnTrend" disabled>Show trend line</button>
+  <button class="btn ghost" id="btnClearG">Clear my points</button>
+ </div>
+ <div id="gmsg" role="status"></div>
+ <p class="note">The trend line is only available after you have tried the graph. A line of best fit does not have to go through every point.</p>
+</section>
+
+<section class="card" id="secF">
+ <h2><span class="tag">F</span>Conclusion</h2>
+ <div id="fQs"></div>
+</section>
+
+<section class="card" id="secG">
+ <h2><span class="tag">G</span>Evaluation</h2>
+ <div id="gQs"></div>
+</section>
+
+<section class="card lv-challenge" id="secH">
+ <details><summary style="font-size:1.1rem">Challenge: energy and impact speed (optional)</summary>
+  <div class="box">Use g = 9.8 N/kg. <b>GPE = mass &times; g &times; height</b> (mass in kg, height in m). Impact speed = &radic;(2 &times; g &times; height).</div>
+  <div class="field"><label>1. Calculate the gravitational potential energy of your meteorite at 100 cm (J). Your meteorite&rsquo;s mass is <b id="hMass"></b> g.</label>
+   <div style="display:flex;gap:8px;max-width:360px"><input type="number" step="any" id="h1" data-f="h1"><button class="btn sm" id="h1chk">Check</button></div><div id="h1fb" class="note"></div>
+   <details class="hint"><summary>Hint</summary>Change grams to kilograms (divide by 1000) and centimetres to metres (divide by 100).</details></div>
+  <div class="field"><label for="h2">2. Describe the energy transfers from the moment you release the meteorite to the crater being formed.</label><textarea id="h2" data-f="h2"></textarea></div>
+  <div class="field"><label>3. Calculate the impact speed from 100 cm (m/s).</label>
+   <div style="display:flex;gap:8px;max-width:360px"><input type="number" step="any" id="h3" data-f="h3"><button class="btn sm" id="h3chk">Check</button></div><div id="h3fb" class="note"></div>
+   <label for="h3b" style="margin-top:8px">Compare the speed from 20 cm and 80 cm. When the height is four times bigger, what happens to the speed?</label><textarea id="h3b" data-f="h3b"></textarea></div>
+  <div class="field"><label for="h4">4. Does crater diameter increase in proportion to drop height? Use your results.</label>
+   <button class="btn ghost sm" id="ratioBtn">Show diameter &divide; height for my results</button><div id="ratioOut" class="note"></div><textarea id="h4" data-f="h4"></textarea></div>
+  <div class="field"><label for="h5">5. Explain why this digital model cannot perfectly represent real meteorite impacts.</label><textarea id="h5" data-f="h5"></textarea></div>
+ </details>
+</section>
+
+<section class="card" id="secX">
+ <h2>Scientific explanation</h2>
+ <div id="expLocked" class="locked-msg">This unlocks after you have completed your Results (D) and Graph (E). Try to explain your results yourself first.</div>
+ <button class="btn orange" id="btnExp" style="display:none">Show Scientific Explanation</button>
+ <div id="expBody" style="display:none"></div>
+</section>
+</div>
+<footer>Meteorite Impact Lab &middot; all values are generated by a simplified model for learning, not measured from real impacts.</footer>
+</main>
+
+<div id="gloss" class="overlay" role="dialog" aria-modal="true" aria-label="Glossary"><div class="inner"><button class="btn sm" data-close>Close</button><h2>Scientific vocabulary</h2><dl id="glossList"></dl></div></div>
+<div id="teacher" class="overlay" role="dialog" aria-modal="true" aria-label="Teacher mode"><div class="inner"><div id="teacherBody"></div></div></div>
+<div id="toast"></div>
+<div id="printReport"></div>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s)},$$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s))};
+var G=9.8,RHO=3.0,STD=[20,40,60,80,100],KEY='meteorLab.v1',TEACHER_CODE='moon';
+var reduce=window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ---------- state ---------- */
+function defaults(){var r={};STD.forEach(function(h){r[h]=[null,null,null]});
+ return {name:'',level:'core',variable:'height',height:60,diameter:3,repeat:false,manual:false,variation:false,fields:{},results:r,points:[],checked:false,checkedOnce:false,trend:false,log:[],ext:[],methodRead:false,expShown:false};}
+function load(){var d=defaults();try{var s=JSON.parse(localStorage.getItem(KEY));if(s&&typeof s==='object'){for(var k in s)d[k]=s[k];}}catch(e){}return d;}
+var S=load(),demo=false,demoRes=[],demoI=0,demoBackup=null,saveT;
+function save(){clearTimeout(saveT);saveT=setTimeout(function(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}},150);}
+function esc(t){return String(t==null?'':t).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]});}
+function toast(t){var e=$('#toast');e.textContent=t;e.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(function(){e.style.display='none'},3200);}
+
+/* ---------- model ---------- */
+function mass(d){return RHO*(4/3)*Math.PI*Math.pow(d/2,3);}           /* g, d in cm */
+function dFromMass(m){return Math.cbrt(6*m/(Math.PI*RHO));}
+function speed(h){return Math.sqrt(2*G*h/100);}                        /* m/s */
+function energy(h,d){return mass(d)/1000*G*h/100;}                     /* J */
+function craterD(h,d){var E=energy(h,d);return Math.round(6.8*Math.pow(E,0.25)*Math.pow(d/3,0.1)*10)/10;}
+
+/* ---------- questions ---------- */
+var QF=[
+ {id:'f1',q:'1. Describe the relationship between drop height and crater diameter.',s:['As the drop height increases, the crater diameter...','The graph shows that...']},
+ {id:'f2',q:'2. Use two pieces of numerical evidence from your results to support your conclusion.',s:['When the drop height was ___ cm, the crater diameter was ___ cm, but when it was ___ cm, the diameter was ___ cm.','The crater got ___ cm wider when the height went up by ___ cm.']},
+ {id:'f3',q:'3. Explain why dropping a meteorite from a greater height generally produces a larger crater.',s:['At a greater height the meteorite has more gravitational potential energy because...','As it falls this energy is transferred to...','When it hits the flour, its kinetic energy...']},
+ {id:'f4',q:'4. Was your hypothesis supported by your results?',s:['My hypothesis was / was not supported because my results showed...']}];
+var QG=[
+ {id:'g1',q:'1. Why was it important to keep the meteorite\u2019s mass constant?',s:['If the mass changed as well as the height, I would not know whether...'],h:'Think about fair tests: only one variable should change.'},
+ {id:'g2',q:'2. Why might a real flour-and-marble investigation produce slightly different results each time?',s:['In a real experiment the flour might...','It is hard to release the marble exactly...'],h:'Think about levelling the flour, releasing the marble and measuring the crater edge.'},
+ {id:'g3',q:'3. What are the advantages of using a computer simulation?',s:['A simulation is safer / quicker / cleaner because...'],h:'Think about time, mess, cost and being able to change things easily.'},
+ {id:'g4',q:'4. What are the limitations of using a computer simulation rather than real equipment?',s:['A simulation is only a model, so...','I cannot practise real skills such as...'],h:'Are the numbers measured or calculated? What does the model leave out?'},
+ {id:'g5',q:'5. How could you improve the reliability of the investigation?',s:['I could repeat each height ___ times and calculate...','I could use more heights...'],h:'Reliable means you get similar results when you repeat. What does repeating let you spot?'}];
+function qHTML(list){return list.map(function(q){return '<div class="field" style="margin-bottom:16px"><label for="'+q.id+'">'+q.q+'</label><textarea id="'+q.id+'" data-f="'+q.id+'"></textarea>'+
+ '<details class="starters" data-s="'+q.id+'"><summary>Sentence starters (optional)</summary>'+q.s.map(function(t){return '<button type="button" data-ins="'+q.id+'">'+esc(t)+'</button>'}).join('')+'</details>'+
+ (q.h?'<details class="hint"><summary>Hint (optional)</summary>'+esc(q.h)+'</details>':'')+'</div>';}).join('');}
+$('#fQs').innerHTML=qHTML(QF);$('#gQs').innerHTML=qHTML(QG);
+
+/* ---------- glossary ---------- */
+var GL=[['Independent variable','The variable you deliberately change in an investigation.'],['Dependent variable','The variable you measure to see the effect of the change.'],['Controlled variable','A variable you keep the same to make the test fair.'],['Hypothesis','A testable prediction, with a scientific reason.'],['Meteoroid / meteorite','A meteoroid is a small rock in space. If it lands on a planet or moon it is called a meteorite.'],['Crater','A bowl-shaped hole made when something hits a surface.'],['Gravitational field strength (g)','The pull of gravity per kilogram. On Earth, g = 9.8 N/kg.'],['Gravitational potential energy','Energy stored in an object because of its height. GPE = mass \u00d7 g \u00d7 height.'],['Kinetic energy','The energy an object has because it is moving.'],['Energy transfer','Energy moving from one store to another, for example gravitational potential to kinetic.'],['Mean','The average: add up the values then divide by how many there are.'],['Reliable','Gives similar results when the investigation is repeated.'],['Anomaly','A result that does not fit the pattern.'],['Trend line','A smooth line or curve of best fit drawn through the middle of the points.'],['Model','A simplified representation of something real, used to make predictions.'],['Density','How much mass is in a certain volume of a material.'],['Ejecta','Material thrown out of a crater when something hits.']];
+$('#glossList').innerHTML=GL.map(function(g){return '<dt>'+g[0]+'</dt><dd>'+g[1]+'</dd>'}).join('');
+
+/* ---------- bind fields ---------- */
+$$('[data-f]').forEach(function(el){el.value=S.fields[el.dataset.f]||'';el.addEventListener('input',function(){S.fields[el.dataset.f]=el.value;save();updateProgress();});});
+$('#pupilName').value=S.name;$('#pupilName').addEventListener('input',function(e){S.name=e.target.value;save();});
+$('#methodRead').checked=!!S.methodRead;$('#methodRead').addEventListener('change',function(e){S.methodRead=e.target.checked;save();updateProgress();});
+document.addEventListener('click',function(e){var b=e.target.closest('[data-ins]');if(b){var t=$('#'+b.dataset.ins);t.value+=(t.value&&!/\s$/.test(t.value)?' ':'')+b.textContent+' ';t.dispatchEvent(new Event('input'));t.focus();}
+ if(e.target.matches('[data-close]')){e.target.closest('.overlay').classList.remove('open');}});
+
+/* ---------- level ---------- */
+function applyLevel(){document.body.dataset.level=S.level;$('#level').value=S.level;$$('details.starters').forEach(function(d){d.open=S.level==='support'});}
+$('#level').addEventListener('change',function(e){S.level=e.target.value;applyLevel();updateReadouts();save();});
+
+/* ---------- simulation drawing ---------- */
+var cv=$('#sim'),ctx=cv.getContext('2d'),W=900,H=570,SURF=400,CX=450,PXCM=30,VSC=2.0,TX0=60,TX1=840,TBOT=498;
+(function(){var dpr=Math.min(2,window.devicePixelRatio||1);cv.width=W*dpr;cv.height=H*dpr;ctx.setTransform(dpr,0,0,dpr,0,0);})();
+var anim=null,crater=null,specks=[];
+(function(){var s=12345;function r(){s=(s*16807)%2147483647;return s/2147483647;}for(var i=0;i<420;i++)specks.push([TX0+r()*(TX1-TX0),SURF-14+r()*(TBOT-SURF+14),r()*1.6+.4,r()]);})();
+function ballR(d){return 6+d*6;}
+function ease(t){return 1-Math.pow(1-t,3);}
+function flourPath(c){
+ ctx.beginPath();ctx.moveTo(TX0,TBOT);ctx.lineTo(TX0,SURF);
+ if(c&&c.p>0.02){var R=c.D*PXCM/2*c.p,depth=c.D*PXCM*0.17*c.p,rim=depth*0.3,rw=R*0.45,x0=CX-R-rw,x1=CX+R+rw;ctx.lineTo(x0,SURF);
+  for(var x=x0;x<=x1;x+=2){var a=Math.abs((x-CX)/R),y;if(a<=1)y=SURF+depth*(1-a*a);else y=SURF-rim*Math.sin(Math.PI*(a-1)/(rw/R));ctx.lineTo(x,y);}
+  ctx.lineTo(x1,SURF);}
+ ctx.lineTo(TX1,SURF);ctx.lineTo(TX1,TBOT);ctx.closePath();}
+function drawBall(cx,cy,r,streak){
+ if(streak>0){ctx.strokeStyle='rgba(180,210,255,'+Math.min(.5,streak)+')';ctx.lineWidth=2;[-.5,0,.5].forEach(function(k){ctx.beginPath();ctx.moveTo(cx+k*r,cy-r-6);ctx.lineTo(cx+k*r,cy-r-6-streak*70);ctx.stroke();});}
+ var g=ctx.createRadialGradient(cx-r*.35,cy-r*.35,r*.1,cx,cy,r);g.addColorStop(0,'#e6ebf5');g.addColorStop(.5,'#8e9bb3');g.addColorStop(1,'#3b4760');
+ ctx.fillStyle=g;ctx.beginPath();ctx.arc(cx,cy,r,0,7);ctx.fill();ctx.strokeStyle='rgba(0,0,0,.4)';ctx.lineWidth=1;ctx.stroke();}
+function draw(){
+ var g=ctx.createLinearGradient(0,0,0,H);g.addColorStop(0,'#08142b');g.addColorStop(1,'#10294f');ctx.fillStyle=g;ctx.fillRect(0,0,W,H);
+ ctx.strokeStyle='rgba(46,196,182,.07)';ctx.lineWidth=1;for(var gx=0;gx<W;gx+=30){ctx.beginPath();ctx.moveTo(gx,0);ctx.lineTo(gx,SURF);ctx.stroke();}for(var gy=SURF;gy>0;gy-=30){ctx.beginPath();ctx.moveTo(0,gy);ctx.lineTo(W,gy);ctx.stroke();}
+ var h=anim?anim.h:S.height,d=anim?anim.d:S.diameter,r=ballR(d);
+ /* height scale */
+ ctx.strokeStyle='#a9b8d0';ctx.fillStyle='#a9b8d0';ctx.font='10px system-ui';ctx.textAlign='right';ctx.lineWidth=1;
+ ctx.beginPath();ctx.moveTo(40,SURF);ctx.lineTo(40,SURF-150*VSC);ctx.stroke();
+ for(var t=0;t<=150;t+=10){var y=SURF-t*VSC,big=t%50===0;ctx.beginPath();ctx.moveTo(big?28:34,y);ctx.lineTo(40,y);ctx.stroke();if(big)ctx.fillText(t,25,y+3);}
+ ctx.textAlign='left';ctx.fillText('cm',3,SURF-150*VSC-8);
+ var sy=SURF-h*VSC;ctx.strokeStyle='#ff9f43';ctx.fillStyle='#ff9f43';ctx.setLineDash([5,4]);ctx.beginPath();ctx.moveTo(40,sy);ctx.lineTo(CX-r-12,sy);ctx.stroke();ctx.setLineDash([]);
+ ctx.font='bold 13px system-ui';ctx.fillText('start height '+h+' cm',48,sy-6);
+ /* ball */
+ var showStart=!anim&&!crater;
+ if(showStart){ctx.fillStyle='#6b7a96';ctx.fillRect(CX-5,SURF-h*VSC-2*r-12,10,14);drawBall(CX,SURF-h*VSC-r,r,0);}
+ else if(anim&&anim.phase==='fall'){var f=Math.min(1,(performance.now()-anim.t0)/anim.T);drawBall(CX,SURF-r-h*VSC*(1-f*f),r,f*f*.9);}
+ else if(crater){var dep=crater.D*PXCM*0.17*crater.p;drawBall(CX,SURF+dep-r*0.15,r,0);}
+ /* tray */
+ ctx.fillStyle='#5b6b86';ctx.fillRect(TX0-14,SURF-14,14,TBOT-SURF+22);ctx.fillRect(TX1,SURF-14,14,TBOT-SURF+22);ctx.fillRect(TX0-14,TBOT,TX1-TX0+28,10);
+ /* flour */
+ flourPath(crater);var fg=ctx.createLinearGradient(0,SURF-20,0,TBOT);fg.addColorStop(0,'#f6f1e1');fg.addColorStop(1,'#d9d1ba');ctx.fillStyle=fg;ctx.fill();
+ ctx.save();ctx.clip();specks.forEach(function(s){ctx.fillStyle='rgba(120,105,70,'+(.1+s[3]*.25)+')';ctx.fillRect(s[0],s[1],s[2],s[2]);});ctx.restore();
+ flourPath(crater);ctx.strokeStyle='#bdb396';ctx.lineWidth=1.5;ctx.stroke();
+ ctx.fillStyle='#e8e1cc';ctx.font='11px system-ui';ctx.textAlign='left';ctx.fillText('flour (5 cm deep)',TX0+8,TBOT-8);
+ /* dust */
+ if(anim&&anim.parts)anim.parts.forEach(function(p){ctx.fillStyle='rgba(245,238,214,'+Math.max(0,p.life*.7)+')';ctx.beginPath();ctx.arc(p.x,p.y,p.s,0,7);ctx.fill();});
+ /* ruler */
+ var ry=512;ctx.fillStyle='#f0c860';ctx.fillRect(TX0,ry,TX1-TX0,44);ctx.strokeStyle='#2a2000';ctx.fillStyle='#2a2000';ctx.lineWidth=1;ctx.font='11px system-ui';ctx.textAlign='center';
+ for(var mm=0;mm<=260;mm++){var x=TX0+mm*PXCM/10,len=mm%10===0?18:mm%5===0?12:7;ctx.beginPath();ctx.moveTo(x,ry);ctx.lineTo(x,ry+len);ctx.stroke();if(mm%10===0)ctx.fillText(mm/10,x,ry+32);}
+ ctx.textAlign='right';ctx.fillText('cm',TX1-4,ry+42);
+ /* measurement markers */
+ if(crater&&crater.p>=1){var Rr=crater.D*PXCM/2;ctx.strokeStyle='#ff9f43';ctx.lineWidth=2;ctx.setLineDash([6,4]);[CX-Rr,CX+Rr].forEach(function(x){ctx.beginPath();ctx.moveTo(x,SURF-34);ctx.lineTo(x,ry);ctx.stroke();});ctx.setLineDash([]);
+  ctx.beginPath();ctx.moveTo(CX-Rr,SURF-30);ctx.lineTo(CX+Rr,SURF-30);ctx.stroke();ctx.fillStyle='#ff9f43';ctx.font='bold 14px system-ui';ctx.textAlign='center';
+  ctx.fillText(S.manual&&!demo?'Read the ruler: left edge to right edge':'Crater diameter = '+crater.D.toFixed(1)+' cm',CX,SURF-38);}
+}
+function frame(now){
+ if(!anim){draw();return;}
+ var dt=Math.min(50,now-(anim.last||now))/1000;anim.last=now;
+ if(anim.phase==='fall'){if(now-anim.t0>=anim.T){anim.phase='impact';anim.ti=now;crater={D:anim.D,p:0};var n=Math.round(18+Math.min(50,speed(anim.h)*9));anim.parts=[];for(var i=0;i<n;i++){var a=(Math.random()-.5)*Math.PI*.9;var sp=60+Math.random()*(80+speed(anim.h)*40);anim.parts.push({x:CX+(Math.random()-.5)*anim.D*PXCM*.5,y:SURF-2,vx:Math.sin(a)*sp*1.6,vy:-Math.cos(a)*sp,s:1+Math.random()*2.6,life:1});}}}
+ else{crater.p=ease(Math.min(1,(now-anim.ti)/(reduce?150:650)));
+  anim.parts.forEach(function(p){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=260*dt;p.life-=dt*1.1;if(p.y>SURF-1){p.y=SURF-1;p.vy*=-.2;p.vx*=.6;}});
+  if(now-anim.ti>(reduce?300:950)){crater.p=1;var a=anim;anim=null;setBusy(false);draw();a.done(a.h,a.d,a.D);return;}}
+ draw();requestAnimationFrame(frame);
+}
+function setBusy(b){$('#btnDrop').disabled=b;$$('#ctlH input,#ctlH button,#ctlS input,#varSel,#optRepeat,#optManual,#optVar,#demoNext').forEach(function(e){if(b)e.dataset.prev=e.disabled?'1':'0';if(b)e.disabled=true;});if(!b)applyLocks();}
+function startDrop(done){
+ if(anim)return;var h=S.height,d=S.diameter,D=craterD(h,d);
+ if(S.variation)D=Math.max(.5,Math.round((D+(Math.random()+Math.random()-1)*.5)*10)/10);
+ crater=null;setBusy(true);
+ anim={h:h,d:d,D:D,phase:'fall',t0:performance.now(),T:3000*Math.sqrt(2*h/100/G)*(reduce?.25:1),done:done,parts:[]};
+ $('#roD').textContent='\u2026';requestAnimationFrame(frame);
+}
+
+/* ---------- controls ---------- */
+function applyLocks(){
+ var sz=S.variable==='size';$('#height').disabled=sz||false;$$('#qh button').forEach(function(b){b.disabled=sz});$('#diam').disabled=!sz;$('#mass').disabled=!sz;
+ $('#ctlH').classList.toggle('locked',sz);$('#ctlS').classList.toggle('locked',!sz);$('#varSel').disabled=false;$('#optRepeat').disabled=false;$('#optManual').disabled=false;$('#optVar').disabled=false;$('#demoNext').disabled=false;$('#btnDrop').disabled=!!anim;}
+function updateReadouts(){
+ var h=S.height,d=S.diameter;$('#roH').textContent=h+' cm';$('#roM').textContent=mass(d).toFixed(1)+' g';$('#roDia').textContent=d.toFixed(1)+' cm';$('#roV').textContent=speed(h).toFixed(2)+' m/s';$('#roE').textContent=energy(h,d).toFixed(3)+' J';
+ $('#heightVal').textContent=h;$('#height').value=h;$('#diam').value=d;$('#diamVal').textContent=d.toFixed(1)+' cm';$('#massVal').textContent=mass(d).toFixed(1)+' g';$('#mass').value=Math.max(10,Math.min(100,Math.round(mass(d))));
+ $('#constD').textContent=d.toFixed(1);$('#constM').textContent=mass(d).toFixed(1);$('#hMass').textContent=mass(d).toFixed(1);
+ $$('#qh button').forEach(function(b){b.classList.toggle('on',+b.dataset.h===h)});$('#varSel').value=S.variable;
+ $('#optRepeat').checked=S.repeat;$('#optManual').checked=S.manual;$('#optVar').checked=S.variation;$('#resTable').parentNode.classList.toggle('hide-t23',!S.repeat);
+}
+function resetScene(){if(anim)return;crater=null;$('#roD').textContent='\u2013';draw();}
+function changed(){updateReadouts();resetScene();save();}
+$('#qh').innerHTML=STD.map(function(h){return '<button type="button" data-h="'+h+'">'+h+' cm</button>'}).join('');
+$('#qh').addEventListener('click',function(e){var b=e.target.closest('button');if(b){S.height=+b.dataset.h;changed();}});
+$('#height').addEventListener('input',function(e){S.height=+e.target.value;changed();});
+$('#diam').addEventListener('input',function(e){S.diameter=Math.round(+e.target.value*10)/10;changed();});
+$('#mass').addEventListener('input',function(e){S.diameter=Math.round(dFromMass(+e.target.value)*100)/100;changed();});
+$('#varSel').addEventListener('change',function(e){S.variable=e.target.value;if(S.variable==='size'){S.height=60;if(S.diameter===3)S.diameter=2;}else{S.diameter=3;}applyLocks();changed();msg(S.variable==='size'?'Extension: height is locked at 60 cm. Mass and diameter change together.':'Drop height is the independent variable. Size is locked.');});
+$('#optRepeat').addEventListener('change',function(e){S.repeat=e.target.checked;renderResults();updateReadouts();updateProgress();save();});
+$('#optManual').addEventListener('change',function(e){S.manual=e.target.checked;save();});
+$('#optVar').addEventListener('change',function(e){S.variation=e.target.checked;save();msg(S.variation?'Variation is ON: repeated drops will give slightly different results, like a real experiment.':'Variation is OFF: identical drops give identical results.');});
+function msg(t,cls){var m=$('#msg');m.textContent=t;m.className=cls||'';}
+$('#btnDrop').addEventListener('click',function(){startDrop(afterDrop);});
+
+function afterDrop(h,d,D){
+ var shown=(S.manual&&!demo)?'\u2013':D.toFixed(1)+' cm';$('#roD').textContent=shown;
+ var rec={h:h,d:d,m:+mass(d).toFixed(1),v:+speed(h).toFixed(2),D:D};
+ if(demo){demoRes.push({h:h,D:D});renderDemo();return;}
+ S.log.unshift(rec);S.log=S.log.slice(0,15);
+ if(S.variable==='size'){S.ext.push(rec);if(S.manual){msg('Read the ruler to find the diameter.');}else msg('Crater diameter '+D.toFixed(1)+' cm added to the extension results.','ok');renderLog();save();return;}
+ if(S.manual){msg('Now read the crater diameter from the ruler and type it into your results table.');renderLog();save();return;}
+ if(STD.indexOf(h)<0){msg('Crater diameter '+D.toFixed(1)+' cm. This is not one of the five required heights, so it was not added to your table.');renderLog();save();return;}
+ var row=S.results[h],i=0;
+ if(S.repeat){i=row.indexOf(null);if(i<0){msg('All three trials at '+h+' cm are already recorded. Clear a cell in the table if you want to replace one.');renderLog();return;}}
+ row[i]=D;msg('Recorded '+D.toFixed(1)+' cm as trial '+(i+1)+' at '+h+' cm.','ok');
+ renderResults();renderLog();updateProgress();save();
+}
+
+/* ---------- results ---------- */
+function mean(h){var a=S.results[h].slice(0,S.repeat?3:1).filter(function(v){return v!=null});return a.length?a.reduce(function(x,y){return x+y},0)/a.length:null;}
+function renderResults(){
+ var tb=$('#resTable tbody');tb.innerHTML=STD.map(function(h){var r=S.results[h],m=mean(h);
+  return '<tr><td><b>'+h+'</b></td>'+[0,1,2].map(function(i){return '<td'+(i?' class="t23"':'')+'><input type="number" step="0.1" min="0" max="30" data-h="'+h+'" data-i="'+i+'" value="'+(r[i]==null?'':r[i])+'" aria-label="Trial '+(i+1)+' at '+h+' cm"></td>'}).join('')+'<td class="mean" id="mean'+h+'">'+(m==null?'\u2013':m.toFixed(2))+'</td></tr>';}).join('');
+ $$('#resTable input').forEach(function(inp){inp.addEventListener('input',function(){var v=parseFloat(inp.value);S.results[inp.dataset.h][+inp.dataset.i]=(isFinite(v)&&v>=0&&v<=30)?v:null;var m=mean(+inp.dataset.h);$('#mean'+inp.dataset.h).textContent=m==null?'\u2013':m.toFixed(2);save();updateProgress();});});
+ $('#resTable').parentNode.classList.toggle('hide-t23',!S.repeat);
+}
+function renderLog(){
+ $('#logOut').innerHTML=S.log.length?'<table><tr><th>Height (cm)</th><th>Diameter (cm)</th><th>Mass (g)</th><th>Speed (m/s)</th><th>Crater (cm)</th></tr>'+S.log.map(function(r){return '<tr><td>'+r.h+'</td><td>'+r.d.toFixed(1)+'</td><td>'+r.m+'</td><td>'+r.v+'</td><td>'+(S.manual?'\u2013':r.D.toFixed(1))+'</td></tr>'}).join('')+'</table>':'No drops yet.';
+ $('#extOut').innerHTML=S.ext.length?'<table><tr><th>Diameter (cm)</th><th>Mass (g)</th><th>Height (cm)</th><th>Crater (cm)</th></tr>'+S.ext.map(function(r){return '<tr><td>'+r.d.toFixed(1)+'</td><td>'+r.m+'</td><td>'+r.h+'</td><td>'+r.D.toFixed(1)+'</td></tr>'}).join('')+'</table>':'<p class="note">No extension results yet.</p>';
+}
+$('#extClear').addEventListener('click',function(){S.ext=[];renderLog();save();});
+
+/* ---------- graph ---------- */
+var gc=$('#graph'),gx=gc.getContext('2d'),GW=720,GH=450,M={l:70,r:25,t:25,b:65},XMAX=120,YMAX=10,hover=null;
+(function(){var dpr=Math.min(2,window.devicePixelRatio||1);gc.width=GW*dpr;gc.height=GH*dpr;gx.setTransform(dpr,0,0,dpr,0,0);})();
+function gpx(x){return M.l+x/XMAX*(GW-M.l-M.r);}function gpy(y){return GH-M.b-y/YMAX*(GH-M.t-M.b);}
+function matches(){var res=S.points.map(function(){return null});var used={};
+ STD.forEach(function(h){var m=mean(h);if(m==null)return;var best=-1,bd=1e9;S.points.forEach(function(p,i){var dd=Math.abs(p.x-h)/3+Math.abs(p.y-m)/.3;if(dd<bd&&!used[i]){bd=dd;best=i}});
+  if(best>=0&&Math.abs(S.points[best].x-h)<=3&&Math.abs(S.points[best].y-m)<=.3){res[best]=true;used[best]=1;}});return res;}
+function powerFit(){var xs=[],ys=[];STD.forEach(function(h){var m=mean(h);if(m>0){xs.push(Math.log(h));ys.push(Math.log(m))}});if(xs.length<2)return null;var n=xs.length,sx=0,sy=0,sxx=0,sxy=0;for(var i=0;i<n;i++){sx+=xs[i];sy+=ys[i];sxx+=xs[i]*xs[i];sxy+=xs[i]*ys[i];}var den=n*sxx-sx*sx;if(!den)return null;var b=(n*sxy-sx*sy)/den,a=Math.exp((sy-b*sx)/n);return function(x){return a*Math.pow(x,b)};}
+function drawGraph(){
+ gx.fillStyle='#fff';gx.fillRect(0,0,GW,GH);gx.lineWidth=1;gx.font='12px system-ui';
+ for(var x=0;x<=XMAX;x+=10){gx.strokeStyle=x%20===0?'#c8d3e6':'#e8edf6';gx.beginPath();gx.moveTo(gpx(x),gpy(0));gx.lineTo(gpx(x),gpy(YMAX));gx.stroke();}
+ for(var y=0;y<=YMAX;y++){gx.strokeStyle='#c8d3e6';gx.beginPath();gx.moveTo(gpx(0),gpy(y));gx.lineTo(gpx(XMAX),gpy(y));gx.stroke();}
+ gx.strokeStyle='#111';gx.lineWidth=2;gx.beginPath();gx.moveTo(gpx(0),gpy(YMAX));gx.lineTo(gpx(0),gpy(0));gx.lineTo(gpx(XMAX),gpy(0));gx.stroke();
+ gx.fillStyle='#111';gx.textAlign='center';for(x=0;x<=XMAX;x+=20)gx.fillText(x,gpx(x),gpy(0)+16);gx.textAlign='right';for(y=0;y<=YMAX;y++)gx.fillText(y,gpx(0)-8,gpy(y)+4);
+ gx.textAlign='center';gx.font='bold 13px system-ui';gx.fillText('Drop height (cm)',(gpx(0)+gpx(XMAX))/2,GH-14);gx.save();gx.translate(16,(gpy(0)+gpy(YMAX))/2);gx.rotate(-Math.PI/2);gx.fillText('Mean crater diameter (cm)',0,0);gx.restore();
+ if(S.trend){var f=powerFit();if(f){gx.strokeStyle='#e8740c';gx.lineWidth=3;gx.beginPath();for(var t=10;t<=110;t+=1){var yy=f(t);if(t===10)gx.moveTo(gpx(t),gpy(yy));else gx.lineTo(gpx(t),gpy(yy));}gx.stroke();gx.fillStyle='#e8740c';gx.textAlign='left';gx.font='12px system-ui';gx.fillText('trend line (curve of best fit)',gpx(62),gpy(0)-10);}}
+ var mt=S.checked?matches():null;
+ S.points.forEach(function(p,i){var col='#0b3d91';if(mt)col=mt[i]?'#1a9e55':'#e8740c';gx.strokeStyle=col;gx.lineWidth=2.5;var px=gpx(p.x),py=gpy(p.y);gx.beginPath();gx.moveTo(px-6,py-6);gx.lineTo(px+6,py+6);gx.moveTo(px+6,py-6);gx.lineTo(px-6,py+6);gx.stroke();if(mt&&mt[i]){gx.beginPath();gx.arc(px,py,10,0,7);gx.stroke();}});
+ if(hover){gx.strokeStyle='rgba(11,61,145,.35)';gx.setLineDash([4,4]);gx.lineWidth=1;gx.beginPath();gx.moveTo(gpx(hover.x),gpy(0));gx.lineTo(gpx(hover.x),gpy(hover.y));gx.lineTo(gpx(0),gpy(hover.y));gx.stroke();gx.setLineDash([]);gx.fillStyle='#0b3d91';gx.font='bold 12px system-ui';gx.textAlign='left';gx.fillText('('+hover.x+' cm, '+hover.y.toFixed(1)+' cm)',M.l+8,M.t+14);}
+}
+function gpos(e){var r=gc.getBoundingClientRect(),cx=(e.clientX-r.left)*GW/r.width,cy=(e.clientY-r.top)*GH/r.height;if(cx<M.l-4||cx>GW-M.r+4||cy<M.t-4||cy>GH-M.b+4)return null;
+ return {x:Math.max(0,Math.min(XMAX,Math.round((cx-M.l)/(GW-M.l-M.r)*XMAX))),y:Math.max(0,Math.min(YMAX,Math.round((GH-M.b-cy)/(GH-M.t-M.b)*YMAX*10)/10)),cx:cx,cy:cy};}
+gc.addEventListener('mousemove',function(e){hover=gpos(e);drawGraph();});gc.addEventListener('mouseleave',function(){hover=null;drawGraph();});
+gc.addEventListener('click',function(e){var p=gpos(e);if(!p)return;
+ for(var i=0;i<S.points.length;i++){if(Math.hypot(gpx(S.points[i].x)-p.cx,gpy(S.points[i].y)-p.cy)<10){S.points.splice(i,1);S.checked=false;$('#gmsg').textContent='';drawGraph();save();updateProgress();return;}}
+ if(S.points.length>=20){$('#gmsg').textContent='That is a lot of points! Remove some first.';return;}
+ S.points.push({x:p.x,y:p.y});S.checked=false;$('#gmsg').textContent='';drawGraph();save();updateProgress();});
+$('#btnCheck').addEventListener('click',function(){var g=$('#gmsg');
+ var have=STD.filter(function(h){return mean(h)!=null});if(!have.length){g.className='no';g.textContent='Fill in your results table first, then plot your means.';return;}
+ if(S.points.length<3){g.className='no';g.textContent='Plot at least 3 points before checking.';return;}
+ S.checked=true;S.checkedOnce=true;var mt=matches(),good=mt.filter(Boolean).length,msgs=[];
+ have.forEach(function(h){var m=mean(h);var ok=S.points.some(function(p,i){return mt[i]&&Math.abs(p.x-h)<=3&&Math.abs(p.y-m)<=.3});if(!ok){var near=S.points.filter(function(p){return Math.abs(p.x-h)<=6})[0];msgs.push(h+' cm'+(near?(near.y>m?' (your point looks too high)':' (your point looks too low)'):' (no point yet)'));}});
+ g.className=good===have.length?'ok':'';g.textContent=good+' of '+have.length+' points are in the right place. '+(msgs.length?'Check: '+msgs.join(', ')+'.':'Well done! You can now show the trend line.');
+ $('#btnTrend').disabled=false;drawGraph();save();updateProgress();});
+$('#btnTrend').addEventListener('click',function(){S.trend=!S.trend;this.textContent=S.trend?'Hide trend line':'Show trend line';if(S.trend)$('#gmsg').textContent='The trend line is a curve: crater diameter increases with height, but more slowly as the height gets bigger.';drawGraph();save();});
+$('#btnClearG').addEventListener('click',function(){S.points=[];S.checked=false;S.trend=false;$('#btnTrend').textContent='Show trend line';$('#gmsg').textContent='';drawGraph();save();updateProgress();});
+
+/* ---------- progress ---------- */
+function filled(k,n){return (S.fields[k]||'').trim().length>=n;}
+function status(){var req=S.repeat?3:1,D=STD.every(function(h){return S.results[h].slice(0,req).every(function(v){return v!=null})});
+ return {A:['iv','dv','cv1','cv2','cv3'].every(function(k){return filled(k,2)}),B:(filled('hyp1',3)&&filled('hyp2',5))||filled('hypOwn',15),C:!!S.methodRead,D:D,E:S.checked&&S.points.length>=5,F:QF.every(function(q){return filled(q.id,10)}),G:QG.every(function(q){return filled(q.id,15)})};}
+function updateProgress(){var st=status(),keys=Object.keys(st),n=keys.filter(function(k){return st[k]}).length;
+ $('#progress').innerHTML=keys.map(function(k){return '<a class="chip'+(st[k]?' done':'')+'" href="#sec'+k+'">'+(st[k]?'\u2713 ':'')+k+'</a>'}).join('')+'<div class="pbar" title="'+n+' of 7 sections complete"><i style="width:'+(n/7*100)+'%"></i></div><span class="note">'+n+'/7</span>';
+ var unlocked=st.D&&st.E;$('#expLocked').style.display=unlocked?'none':'block';$('#btnExp').style.display=unlocked&&!S.expShown?'inline-block':'none';$('#expBody').style.display=unlocked&&S.expShown?'block':'none';}
+$('#btnExp').addEventListener('click',function(){S.expShown=true;buildExp();updateProgress();save();});
+function buildExp(){var d=S.diameter;$('#expBody').innerHTML='<p><b>What happened?</b> When you lift the meteorite it gains <b>gravitational potential energy</b> (GPE = mass &times; g &times; height). The higher you lift it, the more energy it stores. When you let go, this energy is transferred to <b>kinetic energy</b> as it speeds up. Neglecting air resistance, v = &radic;(2gh), so a greater height means a greater impact speed.</p><table><tr><th>Height (cm)</th><th>GPE (J)</th><th>Impact speed (m/s)</th></tr>'+STD.map(function(h){return '<tr><td>'+h+'</td><td>'+energy(h,d).toFixed(3)+'</td><td>'+speed(h).toFixed(2)+'</td></tr>'}).join('')+'</table><p>On impact the kinetic energy is transferred to the flour. The flour is pushed aside and thrown out, making a crater. More energy moves more flour, so the crater is generally larger.</p><p><b>Is it proportional?</b> Not exactly. Doubling the height does not double the diameter, because a wider crater means more flour has to be moved and the flour pushes back. The graph curves.</p><p class="warn"><b>Model, not proof.</b> These numbers come from a simplified computer model. Real meteorites hit at thousands of times this speed, melt and vaporise rock and explode on impact. The flour experiment is an <i>analogy</i> that helps us understand the idea.</p>';}
+
+/* ---------- challenge checks ---------- */
+$('#h1chk').addEventListener('click',function(){var v=parseFloat($('#h1').value),t=energy(100,S.diameter),f=$('#h1fb');f.innerHTML=isFinite(v)&&Math.abs(v-t)/t<=.03?'<span class="ok">Correct! '+t.toFixed(3)+' J.</span>':'<span class="no">Not quite. Check your units: mass in kg and height in m.</span>';});
+$('#h3chk').addEventListener('click',function(){var v=parseFloat($('#h3').value),t=speed(100),f=$('#h3fb');f.innerHTML=isFinite(v)&&Math.abs(v-t)<=.06?'<span class="ok">Correct! '+t.toFixed(2)+' m/s.</span>':'<span class="no">Not quite. Use v = \u221a(2 \u00d7 9.8 \u00d7 height in metres).</span>';});
+$('#ratioBtn').addEventListener('click',function(){var rows=STD.filter(function(h){return mean(h)!=null}).map(function(h){return h+' cm: '+mean(h).toFixed(2)+' \u00f7 '+h+' = '+(mean(h)/h).toFixed(3)});$('#ratioOut').innerHTML=rows.length?rows.join('<br>'):'Complete your results table first.';});
+
+/* ---------- demo ---------- */
+function renderDemo(){var mx=Math.max.apply(null,demoRes.map(function(r){return r.D}).concat([1]));$('#demoOut').innerHTML=demoRes.length?'<table><tr><th>Height (cm)</th><th>Crater diameter (cm)</th><th style="width:45%">Size</th></tr>'+demoRes.map(function(r){return '<tr><td>'+r.h+'</td><td>'+r.D.toFixed(1)+'</td><td style="text-align:left"><div class="dbar" style="width:'+(r.D/mx*100)+'%"></div></td></tr>'}).join('')+'</table>':'<p class="note">No demonstration drops yet.</p>';}
+function setDemo(on){if(on){demoBackup={h:S.height,d:S.diameter,v:S.variable};S.variable='height';S.diameter=3;S.height=STD[0];demoRes=[];demoI=0;}else if(demoBackup){S.height=demoBackup.h;S.diameter=demoBackup.d;S.variable=demoBackup.v;demoBackup=null;}
+ demo=on;document.body.classList.toggle('demo',on);applyLocks();changed();renderDemo();$('#teacher').classList.remove('open');if(on)window.scrollTo(0,0);}
+$('#demoNext').addEventListener('click',function(){if(anim)return;S.height=STD[demoI%STD.length];demoI++;changed();setTimeout(function(){startDrop(afterDrop)},350);});
+$('#demoReset').addEventListener('click',function(){demoRes=[];demoI=0;S.height=STD[0];changed();renderDemo();});
+$('#demoExit').addEventListener('click',function(){setDemo(false);});
+
+/* ---------- teacher ---------- */
+$('#btnTeacher').addEventListener('click',function(){var c=window.prompt('Teacher passcode (default: moon)');if(c===null)return;if(c.trim().toLowerCase()!==TEACHER_CODE){toast('Incorrect passcode');return;}buildTeacher();$('#teacher').classList.add('open');});
+function buildTeacher(){var d=3,m=mass(d).toFixed(1);
+ var rows=STD.map(function(h){return '<tr><td>'+h+'</td><td>'+energy(h,d).toFixed(3)+'</td><td>'+speed(h).toFixed(2)+'</td><td>'+craterD(h,d).toFixed(1)+'</td></tr>'}).join('');
+ $('#teacherBody').innerHTML='<button class="btn sm" data-close>Close</button> <button class="btn orange sm" id="tDemo">Start demonstration mode</button> <button class="btn ghost sm" id="tReset">Reset demonstration</button>'+
+ '<h2>Teacher Mode</h2><p class="note">Answers are hidden from pupil mode. Change the passcode in the TEACHER_CODE constant in the script.</p>'+
+ '<h3>Model answers</h3><dl>'+
+ '<dt>A Variables</dt><dd>Independent: drop height (cm). Dependent: crater diameter (cm). Controlled: meteorite mass, meteorite diameter, surface material (flour), flour depth, impact angle (90&deg;), how the flour is levelled and the crater measured.</dd>'+
+ '<dt>B Hypothesis</dt><dd>&ldquo;As the drop height increases, the crater diameter will increase because the meteorite has more gravitational potential energy, so it hits the flour faster with more kinetic energy.&rdquo;</dd>'+
+ '<dt>F1</dt><dd>Positive relationship: as height increases, crater diameter increases. The graph curves, so the increase gets smaller for each extra 20 cm.</dd>'+
+ '<dt>F2</dt><dd>Two quoted values, e.g. at 20 cm the crater was '+craterD(20,d).toFixed(1)+' cm and at 100 cm it was '+craterD(100,d).toFixed(1)+' cm (5 times the height, but only about '+(craterD(100,d)/craterD(20,d)).toFixed(1)+' times the diameter).</dd>'+
+ '<dt>F3</dt><dd>More height gives more GPE (E = mgh). This is transferred to kinetic energy as it falls (faster impact). On impact the energy is transferred to the flour, which moves more material, giving a bigger crater.</dd>'+
+ '<dt>F4</dt><dd>Supported if the diameter increased with height. Must refer to results.</dd>'+
+ '<dt>G1</dt><dd>So that only height affects the crater. Changing mass changes the energy too, so we could not tell which variable caused the change.</dd>'+
+ '<dt>G2</dt><dd>Uneven or compacted flour, flour not levelled the same, not releasing from exactly the same height or exactly vertically, judging the crater edge, and rim collapse.</dd>'+
+ '<dt>G3</dt><dd>Quick, safe, no mess, easy to change variables, easy to repeat, can test extreme values, no equipment cost.</dd>'+
+ '<dt>G4</dt><dd>Numbers are calculated, not measured; assumes an ideal model; leaves out air resistance and real flour behaviour; pupils do not practise practical skills or experience real uncertainty.</dd>'+
+ '<dt>G5</dt><dd>Repeat each height three times, calculate a mean, spot anomalies, use more heights, measure carefully, level the flour each time, use a consistent release method.</dd></dl>'+
+ '<h3>Expected trend (default 3.0 cm, '+m+' g meteorite, no variation)</h3><table><tr><th>Height (cm)</th><th>GPE (J)</th><th>Speed (m/s)</th><th>Crater (cm)</th></tr>'+rows+'</table><p class="note">Crater diameter increases with height, but not linearly: the graph is a curve that flattens. The trend line should not be forced through the origin or every point.</p>'+
+ '<h3>Common misconceptions</h3><ul><li>Heavier objects fall faster (in the model, speed depends only on height).</li><li>Doubling the height doubles the crater diameter.</li><li>Confusing independent and dependent variables.</li><li>&ldquo;Energy is used up&rdquo; instead of transferred.</li><li>The simulation proves how real meteorites behave.</li><li>A larger meteorite is not &ldquo;only wider&rdquo;: in this lab it is also heavier.</li><li>Craters on the Moon come from volcanoes, or the Moon has no craters because it is protected by weather.</li></ul>'+
+ '<h3>The mathematical model</h3><p>Mass from sphere volume at fixed density: m = &rho; &times; (4/3)&pi;(d/2)&sup3;, with &rho; = 3.0 g/cm&sup3;, so mass and diameter are linked. E = mgh with g = 9.8 N/kg. Speed v = &radic;(2gh). Crater diameter: <b>D = 6.8 &times; E<sup>0.25</sup> &times; (d/3)<sup>0.1</sup></b> (cm, E in J). The fourth-root scaling is a simplified approximation: wider craters need disproportionately more energy. It is tuned to give plausible flour-and-marble sizes and is deterministic. The optional variation mode adds a random &plusmn;0.25 cm. It is a model, not experimental evidence.</p>'+
+ '<h3>Discussion questions</h3><ul><li>What would happen to the speed and crater if we dropped the meteorite from 4 m?</li><li>Why is it a problem if the flour is not levelled between drops?</li><li>How is this experiment different from a real meteorite impact on the Moon?</li><li>Why do craters last so long on the Moon but not on Earth?</li><li>How is a model different from an experiment?</li></ul>';
+ $('#tDemo').addEventListener('click',function(){setDemo(true)});$('#tReset').addEventListener('click',function(){demoRes=[];demoI=0;renderDemo();toast('Demonstration reset');});}
+
+/* ---------- print report ---------- */
+function para(k){return '<div class="pa">'+esc(S.fields[k]||'(not answered)')+'</div>';}
+function buildReport(){
+ var hyp=(S.fields.hyp1||S.fields.hyp2)?'I predict that as the drop height increases, the crater diameter will '+(S.fields.hyp1||'...')+' because '+(S.fields.hyp2||'...'):'';
+ if(S.fields.hypOwn)hyp+=(hyp?'\n':'')+S.fields.hypOwn;
+ var rt='<table><tr><th>Drop height (cm)</th><th>Trial 1 (cm)</th>'+(S.repeat?'<th>Trial 2 (cm)</th><th>Trial 3 (cm)</th>':'')+'<th>Mean crater diameter (cm)</th></tr>'+STD.map(function(h){var r=S.results[h],m=mean(h);return '<tr><td>'+h+'</td><td>'+(r[0]==null?'':r[0])+'</td>'+(S.repeat?'<td>'+(r[1]==null?'':r[1])+'</td><td>'+(r[2]==null?'':r[2])+'</td>':'')+'<td>'+(m==null?'':m.toFixed(2))+'</td></tr>'}).join('')+'</table>';
+ var img='';try{drawGraph();img='<img alt="Pupil graph" src="'+gc.toDataURL('image/png')+'">';}catch(e){}
+ var ch='';if(['h1','h2','h3','h3b','h4','h5'].some(function(k){return (S.fields[k]||'').trim()})){ch='<h2>Challenge</h2>'+[['h1','GPE at 100 cm (J)'],['h2','Energy transfers'],['h3','Impact speed from 100 cm (m/s)'],['h3b','Speed comparison'],['h4','Proportionality'],['h5','Limits of the model']].map(function(x){return '<p class="pq">'+x[1]+'</p>'+para(x[0])}).join('');}
+ $('#printReport').innerHTML='<h1>Meteorite Impact Lab: Investigation Report</h1><p><b>Name:</b> '+esc(S.name||'')+' &nbsp; <b>Date:</b> '+new Date().toLocaleDateString('en-GB')+' &nbsp; <b>Level:</b> '+esc(S.level)+'</p>'+
+ '<h2>Research question</h2><p>How does the height from which a meteorite is dropped affect the diameter of the crater it produces?</p>'+
+ '<h2>Variables</h2><p><b>Independent:</b> '+esc(S.fields.iv||'')+'</p><p><b>Dependent:</b> '+esc(S.fields.dv||'')+'</p><p><b>Controlled:</b> '+[S.fields.cv1,S.fields.cv2,S.fields.cv3].map(function(x){return esc(x||'')}).join('; ')+'</p>'+
+ '<h2>Hypothesis</h2><div class="pa">'+esc(hyp||'(not answered)')+'</div>'+
+ '<h2>Method summary</h2><p>Meteorite dropped vertically (90&deg;) into 5 cm of flour from 20, 40, 60, 80 and 100 cm. Meteorite diameter '+S.diameter.toFixed(1)+' cm, mass '+mass(S.diameter).toFixed(1)+' g. '+(S.repeat?'Three trials per height. ':'')+'Results were generated by a computer model'+(S.variation?' with simulated measurement variation':'')+', not measured from real impacts.</p>'+
+ '<h2>Results</h2>'+rt+'<h2>Graph</h2>'+img+
+ '<h2>Conclusion</h2>'+QF.map(function(q){return '<p class="pq">'+esc(q.q)+'</p>'+para(q.id)}).join('')+
+ '<h2>Evaluation</h2>'+QG.map(function(q){return '<p class="pq">'+esc(q.q)+'</p>'+para(q.id)}).join('')+ch;}
+$('#btnPrint').addEventListener('click',function(){buildReport();setTimeout(function(){window.print();},150);});
+window.addEventListener('beforeprint',buildReport);
+
+/* ---------- misc ---------- */
+$('#btnGloss').addEventListener('click',function(){$('#gloss').classList.add('open')});
+$('#btnReset').addEventListener('click',function(){if(!window.confirm('Reset the whole investigation? All your answers, results and graph points will be deleted.'))return;try{localStorage.removeItem(KEY)}catch(e){}S=defaults();$$('[data-f]').forEach(function(el){el.value=''});$('#pupilName').value='';$('#methodRead').checked=false;$('#btnTrend').disabled=true;$('#btnTrend').textContent='Show trend line';$('#gmsg').textContent='';$('#ratioOut').textContent='';$('#h1fb').textContent='';$('#h3fb').textContent='';msg('');crater=null;applyLevel();applyLocks();updateReadouts();renderResults();renderLog();drawGraph();updateProgress();draw();toast('Investigation reset');});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')$$('.overlay').forEach(function(o){o.classList.remove('open')});});
+
+/* ---------- init ---------- */
+applyLevel();updateReadouts();applyLocks();renderResults();renderLog();drawGraph();updateProgress();draw();
+$('#btnTrend').disabled=!S.checkedOnce;$('#btnTrend').textContent=S.trend?'Hide trend line':'Show trend line';if(S.expShown)buildExp();
+})();
+</script>
+</body>
+</html>
